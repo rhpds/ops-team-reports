@@ -107,8 +107,14 @@ for PROJECT_KEY in $(echo "$JIRA_PROJECTS" | tr ',' '\n'); do
     PROJECT_INDEX=$((PROJECT_INDEX + 1))
     JIRA_PROJECT_FILE="/tmp/jira_${PROJECT_KEY}_${TIMESTAMP}.json"
 
+    # Get team members for this project from config
+    # Extract team_members list for the current project, then map to jira_display_name
+    PROJECT_TEAM_MEMBERS=$(yq -r ".selectors.jira.projects[] | select(.key == \"$PROJECT_KEY\") | .team_members[]" "$TEAM_CONFIG" 2>/dev/null | while read -r member_name; do
+        yq -r ".members[] | select(.name == \"$member_name\") | .jira_display_name" "$TEAM_CONFIG" 2>/dev/null
+    done | grep -v "^null$" | paste -sd "," -)
+
     echo "  [$PROJECT_INDEX/$PROJECT_COUNT] Fetching $PROJECT_KEY..."
-    bash "$SCRIPT_DIR/gather_jira.sh" "$WEEK_START" "$WEEK_END" "$JIRA_PROJECT_FILE" "$LOG_DIR" "$PROJECT_KEY"
+    bash "$SCRIPT_DIR/gather_jira.sh" "$WEEK_START" "$WEEK_END" "$JIRA_PROJECT_FILE" "$LOG_DIR" "$PROJECT_KEY" "$PROJECT_TEAM_MEMBERS"
 
     PROJECT_COUNT_VAL=$(jq -r '.issue_count // 0' "$JIRA_PROJECT_FILE" 2>/dev/null || echo "0")
     TOTAL_JIRA_COUNT=$((TOTAL_JIRA_COUNT + PROJECT_COUNT_VAL))

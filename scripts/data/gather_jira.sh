@@ -18,6 +18,7 @@ END_DATE="${2:-$(date -u +%Y-%m-%d)}"
 OUTPUT_FILE="${3:-/tmp/jira.json}"
 LOG_DIR="${4:-logs}"
 JIRA_PROJECT="${5:-RHDPOPS}"
+TEAM_MEMBERS="${6:-}"  # Comma-separated list of JIRA display names
 
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/gather_jira_$(date -u +%Y-%m-%dT%H-%M-%S).log"
@@ -39,8 +40,25 @@ fi
 
 JIRA_BASE_URL="${JIRA_BASE_URL:-https://issues.redhat.com}"
 
+# Build team member filter if provided
+TEAM_FILTER=""
+if [[ -n "$TEAM_MEMBERS" ]]; then
+    IFS=',' read -ra MEMBERS <<< "$TEAM_MEMBERS"
+    MEMBER_CONDITIONS=""
+    for MEMBER in "${MEMBERS[@]}"; do
+        if [[ -n "$MEMBER_CONDITIONS" ]]; then
+            MEMBER_CONDITIONS="$MEMBER_CONDITIONS OR assignee = \"$MEMBER\" OR reporter = \"$MEMBER\""
+        else
+            MEMBER_CONDITIONS="assignee = \"$MEMBER\" OR reporter = \"$MEMBER\""
+        fi
+    done
+    if [[ -n "$MEMBER_CONDITIONS" ]]; then
+        TEAM_FILTER=" AND ($MEMBER_CONDITIONS)"
+    fi
+fi
+
 # JQL query for issues with any activity (created, updated, or resolved) in date range
-JQL="project = $JIRA_PROJECT AND ((created >= '$START_DATE' AND created <= '$END_DATE') OR (updated >= '$START_DATE' AND updated <= '$END_DATE') OR (resolutiondate >= '$START_DATE' AND resolutiondate <= '$END_DATE')) ORDER BY updated DESC"
+JQL="project = $JIRA_PROJECT AND ((created >= '$START_DATE' AND created <= '$END_DATE') OR (updated >= '$START_DATE' AND updated <= '$END_DATE') OR (resolutiondate >= '$START_DATE' AND resolutiondate <= '$END_DATE'))${TEAM_FILTER} ORDER BY updated DESC"
 
 log "Executing JQL: $JQL"
 
