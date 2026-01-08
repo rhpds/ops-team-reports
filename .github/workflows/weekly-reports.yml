@@ -13,7 +13,9 @@ on:
         default: 'rhpds'
 
 permissions:
-  contents: write  # Needed for GitHub Pages deployment
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   generate-reports:
@@ -152,9 +154,10 @@ jobs:
             logs/*.log
           retention-days: 90
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GH_PAT }}
-          publish_dir: ./reports/rhpds
-          enable_jekyll: false
+          path: ./reports/rhpds
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
