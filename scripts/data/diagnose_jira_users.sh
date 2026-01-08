@@ -26,6 +26,16 @@ RESPONSE_ALL=$(curl -s -X GET \
 TOTAL_ALL=$(echo "$RESPONSE_ALL" | jq '.total // 0')
 echo "Total issues in project (any time): $TOTAL_ALL"
 
+# Check if there's an error in the response
+if echo "$RESPONSE_ALL" | jq -e '.errorMessages' > /dev/null 2>&1; then
+    echo "ERROR from JIRA API:"
+    echo "$RESPONSE_ALL" | jq -r '.errorMessages[]'
+    if echo "$RESPONSE_ALL" | jq -e '.errors' > /dev/null 2>&1; then
+        echo "Error details:"
+        echo "$RESPONSE_ALL" | jq '.errors'
+    fi
+fi
+
 if [[ $TOTAL_ALL -gt 0 ]]; then
     echo ""
     echo "=== Sample Recent Issues (last 10) ==="
