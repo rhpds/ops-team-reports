@@ -39,8 +39,8 @@ fi
 
 JIRA_BASE_URL="${JIRA_BASE_URL:-https://issues.redhat.com}"
 
-# JQL query for issues updated in date range
-JQL="project = $JIRA_PROJECT AND updated >= '$START_DATE' AND updated <= '$END_DATE' ORDER BY updated DESC"
+# JQL query for issues with any activity (created, updated, or resolved) in date range
+JQL="project = $JIRA_PROJECT AND ((created >= '$START_DATE' AND created <= '$END_DATE') OR (updated >= '$START_DATE' AND updated <= '$END_DATE') OR (resolutiondate >= '$START_DATE' AND resolutiondate <= '$END_DATE')) ORDER BY updated DESC"
 
 log "Executing JQL: $JQL"
 
@@ -50,7 +50,7 @@ RESPONSE=$(curl -s -X GET \
     -H "Content-Type: application/json" \
     --data-urlencode "jql=$JQL" \
     --data-urlencode "maxResults=100" \
-    --data-urlencode "fields=summary,status,assignee,priority,updated,created,description,comment" \
+    --data-urlencode "fields=summary,status,assignee,priority,updated,created,resolutiondate,description,comment" \
     "${JIRA_BASE_URL}/rest/api/2/search" 2>&1)
 
 # Check if request was successful
@@ -65,7 +65,9 @@ if echo "$RESPONSE" | jq empty 2>/dev/null; then
         "  Status: \(.fields.status.name)\n" +
         "  Assignee: \(.fields.assignee.displayName // "Unassigned")\n" +
         "  Priority: \(.fields.priority.name // "None")\n" +
+        "  Created: \(.fields.created)\n" +
         "  Updated: \(.fields.updated)\n" +
+        (if .fields.resolutiondate then "  Resolved: \(.fields.resolutiondate)\n" else "" end) +
         "  Description: \(.fields.description // "No description" | .[0:200])...\n"
     ' 2>/dev/null || echo "Error parsing JIRA response")
 
