@@ -187,7 +187,14 @@ cat >> "$REPORT_HTML_FILE" << 'HTMLEOF'
 HTMLEOF
 
 echo "✅ HTML report generated: $REPORT_HTML_FILE"
+
+# Create index.html as a copy of the latest report for GitHub Pages
+INDEX_FILE="$REPORT_DIR/index.html"
+cp "$REPORT_HTML_FILE" "$INDEX_FILE"
+echo "✅ Index file created: $INDEX_FILE"
+
 echo ""
 echo "📊 Reports ready!"
 echo "   Markdown: $REPORT_MD_FILE"
 echo "   HTML:     $REPORT_HTML_FILE"
+echo "   Index:    $INDEX_FILE"
