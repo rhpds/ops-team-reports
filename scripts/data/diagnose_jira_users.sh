@@ -32,8 +32,9 @@ RESPONSE_ALL=$(curl -s -X GET \
     --data-urlencode "fields=assignee,reporter,created,updated,key,summary" \
     "${JIRA_BASE_URL}/rest/api/2/search")
 
-echo "DEBUG: Raw API response:"
-echo "$RESPONSE_ALL" | jq '.'
+echo "DEBUG: Raw API response (first 500 chars):"
+echo "$RESPONSE_ALL" | head -c 500
+echo ""
 echo ""
 
 TOTAL_ALL=$(echo "$RESPONSE_ALL" | jq '.total // 0')
