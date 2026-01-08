@@ -152,13 +152,11 @@ jobs:
             logs/*.log
           retention-days: 90
 
-      # GitHub Pages deployment disabled until Pages is configured
-      # - name: Deploy to GitHub Pages (optional)
-      #   if: github.event_name == 'schedule'  # Only on scheduled runs
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GH_PAT }}
-      #     publish_dir: ./reports/rhpds
-      #     destination_dir: reports
-      #     enable_jekyll: false
-      #     commit_message: 'Deploy weekly report for ${{ github.run_number }}'
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+          publish_dir: ./reports/rhpds
+          destination_dir: reports
+          enable_jekyll: false
+          commit_message: 'Deploy weekly report for ${{ github.run_number }}'
