@@ -1,10 +1,17 @@
 name: Test Minimal
 
 on:
+  schedule:
+    - cron: '0 9 * * 1'
   workflow_dispatch:
+    inputs:
+      team:
+        description: 'Team name (default: rhpds)'
+        required: false
+        default: 'rhpds'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test:
