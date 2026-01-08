@@ -1,0 +1,172 @@
+name: Weekly Team Reports
+
+on:
+  schedule:
+    # Every Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      team:
+        description: 'Team name (default: rhpds)'
+        required: false
+        default: 'rhpds'
+
+permissions:
+  contents: write  # Needed for GitHub Pages deployment
+
+jobs:
+  generate-reports:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl jq bash git
+
+          # Install yq for YAML parsing
+          sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/bin/yq
+
+          # Install markdown Python module for HTML conversion
+          pip install markdown
+
+      - name: Install Claude CLI
+        run: |
+          # Install Node.js (required for Claude CLI)
+          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+          sudo apt-get install -y nodejs
+
+          # Install Claude CLI
+          sudo npm install -g @anthropic-ai/claude-code
+
+          # Verify installation
+          claude --version
+
+      - name: Configure Claude authentication
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "ERROR: ANTHROPIC_API_KEY secret not configured"
+            exit 1
+          fi
+
+          # Claude CLI uses ANTHROPIC_API_KEY from environment
+          echo "✅ Claude authentication configured"
+
+      - name: Verify credentials
+        env:
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
+          X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
+        run: |
+          echo "Verifying required credentials..."
+
+          if [ -z "$JIRA_API_TOKEN" ] || [ -z "$JIRA_EMAIL" ]; then
+            echo "ERROR: JIRA credentials not configured"
+            exit 1
+          fi
+
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "ERROR: GITHUB_TOKEN (GH_PAT) not configured"
+            exit 1
+          fi
+
+          if [ -z "$X_SLACK_WEB_TOKEN" ] || [ -z "$X_SLACK_COOKIE_TOKEN" ]; then
+            echo "WARNING: Slack credentials not configured - Slack data will be skipped"
+          fi
+
+          echo "✅ All required credentials configured"
+
+      - name: Create necessary directories
+        run: |
+          mkdir -p data/rhpds reports/rhpds logs
+
+      - name: Gather data from all sources
+        env:
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_BASE_URL: "https://issues.redhat.com"
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
+          X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Gathering Data for RHPDS Team"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          bash scripts/data/gather_all.sh rhpds
+
+          echo ""
+          echo "✅ Data gathering complete"
+
+      - name: Generate weekly report
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📝 Generating Weekly Report"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          bash scripts/reports/generate_report.sh rhpds
+
+          echo ""
+          echo "✅ Report generation complete"
+
+      - name: Display report summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Report Summary"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          if [ -f "data/rhpds/team_data_latest.json" ]; then
+            echo ""
+            echo "📂 Data collected:"
+            jq -r '.metadata | "  Team: \(.team)\n  Period: \(.period_start) to \(.period_end)"' data/rhpds/team_data_latest.json
+
+            JIRA_COUNT=$(jq -r '.jira.issue_count // 0' data/rhpds/team_data_latest.json)
+            GITHUB_COUNT=$(jq -r '.github.pr_count // 0' data/rhpds/team_data_latest.json)
+
+            echo "  JIRA Issues: $JIRA_COUNT"
+            echo "  GitHub PRs: $GITHUB_COUNT"
+          fi
+
+          echo ""
+          echo "📄 Reports generated:"
+          ls -lh reports/rhpds/*.html 2>/dev/null | awk '{print "  " $9 " (" $5 ")"}'
+
+          echo ""
+          echo "✅ All reports generated successfully!"
+
+      - name: Upload reports as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-reports-${{ github.run_number }}
+          path: |
+            reports/
+            data/
+            logs/*.log
+          retention-days: 90
+
+      - name: Deploy to GitHub Pages (optional)
+        if: github.event_name == 'schedule'  # Only on scheduled runs
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./reports/rhpds
+          destination_dir: reports
+          enable_jekyll: false
+          commit_message: 'Deploy weekly report for ${{ github.run_number }}'

@@ -1,0 +1,63 @@
+key: RHPDS
+display_name: "RHPDS Operations Team"
+description: "Red Hat Demo Platform Services - Operations and Infrastructure Team"
+
+# Team members with GitHub usernames
+members:
+  - name: "Ahsen Shah"
+    github_username: "ahsen-shah"
+  - name: "Brian Bethell"
+    github_username: "bbethell-1"
+  - name: "Bo Sebc"
+    github_username: "bosebc"
+  - name: "Daniel Jana"
+    github_username: "d-jana"
+  - name: "Kyle Lewis"
+    github_username: "klewis0928"
+  - name: "Pablo Rivera"
+    github_username: "privera1"
+  - name: "RH JCD"
+    github_username: "rhjcd"
+  - name: "Victor"
+    github_username: "YoNoSoyVictor"
+
+# Data selectors for gathering
+selectors:
+  jira:
+    # JIRA instance configuration
+    base_url: "https://issues.redhat.com"
+    projects: ["RHDPOPS"]
+    board_id: "21616"
+
+  github:
+    # GitHub usernames must match members above
+    usernames:
+      - "ahsen-shah"
+      - "bbethell-1"
+      - "bosebc"
+      - "d-jana"
+      - "klewis0928"
+      - "privera1"
+      - "rhjcd"
+      - "YoNoSoyVictor"
+    # Multiple organizations/repos supported
+    organizations: ["rhpds"]
+
+  slack:
+    # Multiple Slack channels to monitor
+    channel_ids:
+      - "C06TRLE8EHL"
+      - "C069Q7MEYMV"
+      - "C06CCE9D5MK"
+      - "C04N203SNUW"
+      - "C04MLMA15MX"
+    # Filter messages to only these GitHub users
+    filter_by_github_users: true
+
+# Report configuration
+reports:
+  weekly:
+    schedule: "0 9 * * 1"  # Monday at 9 AM UTC
+    timeframe_days: 7
+    enabled: true
+    template: "weekly_update_rhpds"
