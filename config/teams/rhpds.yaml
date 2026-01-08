@@ -86,6 +86,20 @@ selectors:
       - "rhjcd"
     # Multiple organizations/repos supported
     organizations: ["rhpds", "rhjcd"]
+    # Specific repos to monitor for ALL PRs (regardless of author)
+    # Useful for capturing dependabot PRs and other automated contributions
+    monitored_repos:
+      - "rhpds/aiops-skills"
+      - "rhpds/aiops-skills-webapp"
+    # Specific branches to monitor for direct commits
+    # Format: "owner/repo:branch:author"
+    monitored_branches:
+      - repo: "rhpds/aiops-skills"
+        branch: "webapp-ui"
+        author: "rhjcd"
+      - repo: "rhpds/aiops-skills"
+        branch: "webapp-demo"
+        author: "rhjcd"
 
   slack:
     # Multiple Slack channels to monitor

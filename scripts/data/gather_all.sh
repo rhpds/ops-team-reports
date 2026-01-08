@@ -50,6 +50,8 @@ TEAM_KEY=$(yq -r '.key' "$TEAM_CONFIG")
 TEAM_DISPLAY_NAME=$(yq -r '.display_name' "$TEAM_CONFIG")
 GITHUB_USERNAMES=$(yq -r '.selectors.github.usernames | join(",")' "$TEAM_CONFIG")
 GITHUB_ORGS=$(yq -r '.selectors.github.organizations | join(",")' "$TEAM_CONFIG")
+GITHUB_MONITORED_REPOS=$(yq -r '.selectors.github.monitored_repos | join(",")' "$TEAM_CONFIG" 2>/dev/null || echo "")
+GITHUB_MONITORED_BRANCHES=$(yq -r '.selectors.github.monitored_branches | tojson' "$TEAM_CONFIG" 2>/dev/null || echo "[]")
 JIRA_BASE_URL=$(yq -r '.selectors.jira.base_url // "https://issues.redhat.com"' "$TEAM_CONFIG")
 SLACK_CHANNELS=$(yq -r '.selectors.slack.channel_ids | join(",")' "$TEAM_CONFIG")
 
@@ -148,9 +150,10 @@ echo ""
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}█ 3/3: Gathering GitHub Data                               █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-bash "$SCRIPT_DIR/gather_github.sh" "$WEEK_START" "$WEEK_END" "$GITHUB_FILE" "$LOG_DIR" "$GITHUB_USERNAMES" "$GITHUB_ORGS"
-GITHUB_COUNT=$(jq -r '.pr_count // 0' "$GITHUB_FILE" 2>/dev/null || echo "0")
-echo "✅ GitHub: $GITHUB_COUNT PRs"
+bash "$SCRIPT_DIR/gather_github.sh" "$WEEK_START" "$WEEK_END" "$GITHUB_FILE" "$LOG_DIR" "$GITHUB_USERNAMES" "$GITHUB_ORGS" "$GITHUB_MONITORED_REPOS" "$GITHUB_MONITORED_BRANCHES"
+GITHUB_PR_COUNT=$(jq -r '.pr_count // 0' "$GITHUB_FILE" 2>/dev/null || echo "0")
+GITHUB_COMMIT_COUNT=$(jq -r '.commit_count // 0' "$GITHUB_FILE" 2>/dev/null || echo "0")
+echo "✅ GitHub: $GITHUB_PR_COUNT PRs, $GITHUB_COMMIT_COUNT commits"
 echo ""
 
 # 4. MERGE ALL DATA
@@ -203,7 +206,8 @@ echo -e "${CYAN}╚════════════════════�
 echo ""
 
 echo -e "  ${BLUE}JIRA Issues:${NC}    ${GREEN}${TOTAL_JIRA_COUNT}${NC}"
-echo -e "  ${BLUE}GitHub PRs:${NC}     ${GREEN}${GITHUB_COUNT}${NC}"
+echo -e "  ${BLUE}GitHub PRs:${NC}     ${GREEN}${GITHUB_PR_COUNT}${NC}"
+echo -e "  ${BLUE}GitHub Commits:${NC} ${GREEN}${GITHUB_COMMIT_COUNT}${NC}"
 echo -e "  ${BLUE}Slack Channels:${NC} ${GREEN}5${NC}"
 echo ""
 echo -e "${GREEN}✅ Output:${NC} $OUTPUT_FILE"
