@@ -10,14 +10,8 @@ if [[ -z "${JIRA_API_TOKEN:-}" ]]; then
     exit 1
 fi
 
-if [[ -z "${JIRA_EMAIL:-}" ]]; then
-    echo "ERROR: JIRA_EMAIL must be set"
-    exit 1
-fi
-
-# Create Basic Auth header (email:token encoded in base64)
-# Use -w 0 on Linux to prevent line wrapping, ignore error on macOS
-JIRA_AUTH=$(echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64 -w 0 2>/dev/null || echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64)
+# JIRA_API_TOKEN is already base64(email:token) from aiops webapp
+JIRA_AUTH="${JIRA_API_TOKEN}"
 
 echo "Querying issues in $PROJECT..."
 echo ""
