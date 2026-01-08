@@ -4,22 +4,24 @@ description: "Red Hat Demo Platform Services - Operations and Infrastructure Tea
 
 # Team members with GitHub usernames
 members:
+  - name: "Perry Rivera"
+    github_username: "privera1"
+  - name: "Billy Bethell"
+    github_username: "bbethell-1"
+  - name: "Chandrabose Bomman"
+    github_username: "bosebc"
+  - name: "Kadeem Lewis"
+    github_username: "klewis0928"
   - name: "Ahsen Shah"
     github_username: "ahsen-shah"
-  - name: "Brian Bethell"
-    github_username: "bbethell-1"
-  - name: "Bo Sebc"
-    github_username: "bosebc"
-  - name: "Daniel Jana"
+  - name: "Harsh Arora"
+    github_username: "hararora123"
+  - name: "Dibyendu Jana"
     github_username: "d-jana"
-  - name: "Kyle Lewis"
-    github_username: "klewis0928"
-  - name: "Pablo Rivera"
-    github_username: "privera1"
-  - name: "RH JCD"
-    github_username: "rhjcd"
-  - name: "Victor"
+  - name: "Victor Aguilera Fuentes"
     github_username: "YoNoSoyVictor"
+  - name: "Josh Disraeli"
+    github_username: "rhjcd"
 
 # Data selectors for gathering
 selectors:
@@ -32,14 +34,15 @@ selectors:
   github:
     # GitHub usernames must match members above
     usernames:
-      - "ahsen-shah"
+      - "privera1"
       - "bbethell-1"
       - "bosebc"
-      - "d-jana"
       - "klewis0928"
-      - "privera1"
-      - "rhjcd"
+      - "ahsen-shah"
+      - "hararora123"
+      - "d-jana"
       - "YoNoSoyVictor"
+      - "rhjcd"
     # Multiple organizations/repos supported
     organizations: ["rhpds"]
 
