@@ -111,13 +111,23 @@ RESPONSE=$(curl -s -X POST \
         }]
     }")
 
+# Check for API errors
+if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
+    echo "ERROR: Gemini API error:"
+    echo "$RESPONSE" | jq '.error'
+    rm -f "$PROMPT_FILE"
+    exit 1
+fi
+
 # Extract the generated text from the response
 echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // ""' > "$REPORT_MD_FILE"
 
 rm -f "$PROMPT_FILE"
 
 if [[ ! -f "$REPORT_MD_FILE" ]] || [[ ! -s "$REPORT_MD_FILE" ]]; then
-    echo "ERROR: Failed to generate report"
+    echo "ERROR: Failed to generate report - empty response"
+    echo "API Response:"
+    echo "$RESPONSE" | jq '.'
     exit 1
 fi
 
