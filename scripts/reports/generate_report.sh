@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generate weekly report from collected data using Claude
+# Generate weekly report from collected data using Gemini AI
 
 set -Eeuo pipefail
 
@@ -84,10 +84,35 @@ Generate a comprehensive weekly report in Markdown format with the following sec
 Generate the report now:
 EOF
 
-echo "  Calling Claude to generate report..."
+echo "  Calling Gemini AI to generate report..."
 
-# Generate report using Claude
-claude < "$PROMPT_FILE" > "$REPORT_MD_FILE" 2>&1
+# Check for Gemini API key
+if [[ -z "${GEMINI_API_KEY:-}" ]]; then
+    echo "ERROR: GEMINI_API_KEY environment variable not set"
+    rm -f "$PROMPT_FILE"
+    exit 1
+fi
+
+# Generate report using Gemini API
+PROMPT_TEXT=$(cat "$PROMPT_FILE")
+
+# Escape the prompt text for JSON
+PROMPT_JSON=$(jq -n --arg text "$PROMPT_TEXT" '$text')
+
+# Call Gemini API
+RESPONSE=$(curl -s -X POST \
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}" \
+    -H "Content-Type: application/json" \
+    -d "{
+        \"contents\": [{
+            \"parts\": [{
+                \"text\": ${PROMPT_JSON}
+            }]
+        }]
+    }")
+
+# Extract the generated text from the response
+echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // ""' > "$REPORT_MD_FILE"
 
 rm -f "$PROMPT_FILE"
 

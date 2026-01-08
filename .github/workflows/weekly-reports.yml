@@ -40,29 +40,23 @@ jobs:
           # Install markdown Python module for HTML conversion
           pip install markdown
 
-      - name: Install Claude CLI
-        run: |
-          # Install Node.js (required for Claude CLI)
-          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
-          sudo apt-get install -y nodejs
-
-          # Install Claude CLI
-          sudo npm install -g @anthropic-ai/claude-code
-
-          # Verify installation
-          claude --version
-
-      - name: Configure Claude authentication
+      - name: Verify AI credentials
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "ERROR: ANTHROPIC_API_KEY secret not configured"
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "ERROR: GEMINI_API_KEY secret not configured"
             exit 1
           fi
 
-          # Claude CLI uses ANTHROPIC_API_KEY from environment
-          echo "✅ Claude authentication configured"
+          # Test Gemini API connection
+          echo "Testing Gemini API connection..."
+          curl -s -X POST \
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"contents":[{"parts":[{"text":"Hello"}]}]}' > /dev/null
+
+          echo "✅ Gemini API authentication configured and working"
 
       - name: Verify credentials
         env:
@@ -100,7 +94,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
           X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📊 Gathering Data for RHPDS Team"
@@ -113,7 +106,7 @@ jobs:
 
       - name: Generate weekly report
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📝 Generating Weekly Report"

@@ -1,6 +1,6 @@
 # RHPDS Operations Team Weekly Reports
 
-Automated weekly team reports using Claude AI, gathering data from JIRA, Slack, and GitHub.
+Automated weekly team reports using Google Gemini AI, gathering data from JIRA, Slack, and GitHub.
 
 ## 🎯 What It Does
 
@@ -14,8 +14,8 @@ Generates weekly HTML reports from your team's activity across:
 
 ### Prerequisites
 
-- [Claude CLI](https://github.com/anthropics/claude-cli) installed
-- `jq`, `yq`, and `bash` available
+- Google Gemini API key (free tier available)
+- `jq`, `yq`, `curl`, and `bash` available
 - Python 3.11+ with `markdown` module
 
 **Install dependencies (macOS):**
@@ -23,14 +23,13 @@ Generates weekly HTML reports from your team's activity across:
 ```bash
 brew install yq jq
 pip3 install markdown
-npm install -g @anthropic-ai/claude-code
 ```
 
 ### Local Execution
 
 ```bash
 # Set required environment variables
-export ANTHROPIC_API_KEY="your-api-key"
+export GEMINI_API_KEY="your-gemini-api-key"
 export JIRA_API_TOKEN="your-jira-personal-access-token"
 export GITHUB_TOKEN="ghp_your-token"
 export X_SLACK_WEB_TOKEN="xoxc-..."  # Optional
@@ -54,11 +53,13 @@ Set these environment variables:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `ANTHROPIC_API_KEY` | Claude API key | `sk-ant-...` |
+| `GEMINI_API_KEY` | Google Gemini API key | `AIza...` |
 | `JIRA_API_TOKEN` | JIRA Personal Access Token | Get from https://issues.redhat.com |
 | `GITHUB_TOKEN` | GitHub PAT | `ghp_...` |
 | `X_SLACK_WEB_TOKEN` | Slack web token | `xoxc-...` (optional) |
 | `X_SLACK_COOKIE_TOKEN` | Slack cookie | `xoxd-...` (optional) |
+
+**Get Gemini API key:** https://aistudio.google.com/app/apikey → Create API key (free tier available)
 
 **Get JIRA token:** https://issues.redhat.com/secure/ViewProfile.jspa?selectedTab=com.atlassian.pats.pats-plugin:jira-user-personal-access-tokens → Create token
 
@@ -68,7 +69,7 @@ Set these environment variables:
 
 Add these as repository secrets in GitHub Settings → Secrets and variables → Actions:
 
-- `ANTHROPIC_API_KEY`
+- `GEMINI_API_KEY`
 - `JIRA_API_TOKEN` (Personal Access Token from JIRA)
 - `GH_PAT` (GitHub Personal Access Token)
 - `X_SLACK_WEB_TOKEN` (optional)
@@ -155,8 +156,8 @@ Edit `config/teams/rhpds.yaml` to modify:
 ### Report Generation (generate_report.sh)
 
 1. Loads collected data from JSON
-2. Sends to Claude with structured prompt
-3. Claude generates Markdown report
+2. Sends to Google Gemini API with structured prompt
+3. Gemini generates Markdown report
 4. Converts to styled HTML
 
 Report includes:
