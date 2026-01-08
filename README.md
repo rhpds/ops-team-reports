@@ -31,8 +31,7 @@ npm install -g @anthropic-ai/claude-code
 ```bash
 # Set required environment variables
 export ANTHROPIC_API_KEY="your-api-key"
-export JIRA_API_TOKEN="your-jira-token"
-export JIRA_EMAIL="your-jira-email@redhat.com"
+export JIRA_API_TOKEN="your-jira-personal-access-token"
 export GITHUB_TOKEN="ghp_your-token"
 export X_SLACK_WEB_TOKEN="xoxc-..."  # Optional
 export X_SLACK_COOKIE_TOKEN="xoxd-..."  # Optional
@@ -56,13 +55,12 @@ Set these environment variables:
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `ANTHROPIC_API_KEY` | Claude API key | `sk-ant-...` |
-| `JIRA_API_TOKEN` | JIRA API token | Get from https://issues.redhat.com |
-| `JIRA_EMAIL` | Your JIRA email | `user@redhat.com` |
+| `JIRA_API_TOKEN` | JIRA Personal Access Token | Get from https://issues.redhat.com |
 | `GITHUB_TOKEN` | GitHub PAT | `ghp_...` |
 | `X_SLACK_WEB_TOKEN` | Slack web token | `xoxc-...` (optional) |
 | `X_SLACK_COOKIE_TOKEN` | Slack cookie | `xoxd-...` (optional) |
 
-**Get JIRA token:** https://issues.redhat.com/secure/ViewProfile.jspa → Personal Access Tokens
+**Get JIRA token:** https://issues.redhat.com/secure/ViewProfile.jspa?selectedTab=com.atlassian.pats.pats-plugin:jira-user-personal-access-tokens → Create token
 
 **Get GitHub PAT:** https://github.com/settings/tokens → Generate new token (needs `repo` scope)
 
@@ -71,8 +69,7 @@ Set these environment variables:
 Add these as repository secrets in GitHub Settings → Secrets and variables → Actions:
 
 - `ANTHROPIC_API_KEY`
-- `JIRA_API_TOKEN`
-- `JIRA_EMAIL`
+- `JIRA_API_TOKEN` (Personal Access Token from JIRA)
 - `GH_PAT` (GitHub Personal Access Token)
 - `X_SLACK_WEB_TOKEN` (optional)
 - `X_SLACK_COOKIE_TOKEN` (optional)

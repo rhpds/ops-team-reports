@@ -64,7 +64,14 @@ echo -e "${CYAN}╚════════════════════�
 echo ""
 
 WEEK_END=$(date -u +"%Y-%m-%d")
-WEEK_START=$(date -u -d "7 days ago" +"%Y-%m-%d")
+# macOS compatible date command (use -v instead of -d)
+if date -v-1d > /dev/null 2>&1; then
+    # macOS/BSD date
+    WEEK_START=$(date -u -v-7d +"%Y-%m-%d")
+else
+    # GNU date (Linux)
+    WEEK_START=$(date -u -d "7 days ago" +"%Y-%m-%d")
+fi
 echo -e "${BLUE}Team: ${TEAM}${NC}"
 echo -e "${BLUE}Period: ${WEEK_START} to ${WEEK_END}${NC}"
 echo ""

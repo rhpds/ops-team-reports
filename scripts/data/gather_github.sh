@@ -6,8 +6,14 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Arguments
-START_DATE="${1:-$(date -u -d '7 days ago' +%Y-%m-%d)}"
+# Arguments with macOS/Linux compatibility
+if date -v-1d > /dev/null 2>&1; then
+    # macOS/BSD date
+    START_DATE="${1:-$(date -u -v-7d +%Y-%m-%d)}"
+else
+    # GNU date (Linux)
+    START_DATE="${1:-$(date -u -d '7 days ago' +%Y-%m-%d)}"
+fi
 END_DATE="${2:-$(date -u +%Y-%m-%d)}"
 OUTPUT_FILE="${3:-/tmp/github.json}"
 LOG_DIR="${4:-logs}"

@@ -6,8 +6,14 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Arguments
-START_DATE="${1:-$(date -u -d '7 days ago' +%Y-%m-%d)}"
+# Arguments with macOS/Linux compatibility
+if date -v-1d > /dev/null 2>&1; then
+    # macOS/BSD date
+    START_DATE="${1:-$(date -u -v-7d +%Y-%m-%d)}"
+else
+    # GNU date (Linux)
+    START_DATE="${1:-$(date -u -d '7 days ago' +%Y-%m-%d)}"
+fi
 END_DATE="${2:-$(date -u +%Y-%m-%d)}"
 OUTPUT_FILE="${3:-/tmp/jira.json}"
 LOG_DIR="${4:-logs}"
@@ -25,25 +31,22 @@ log "Project: $JIRA_PROJECT"
 log "Date range: $START_DATE to $END_DATE"
 
 # Verify required environment variables
-if [[ -z "${JIRA_API_TOKEN:-}" ]] || [[ -z "${JIRA_EMAIL:-}" ]]; then
-    log "ERROR: JIRA_API_TOKEN and JIRA_EMAIL must be set"
+if [[ -z "${JIRA_API_TOKEN:-}" ]]; then
+    log "ERROR: JIRA_API_TOKEN must be set"
     echo '{"raw_text": "No JIRA data - missing credentials", "source": "jira", "error": "missing_credentials"}' > "$OUTPUT_FILE"
     exit 1
 fi
 
 JIRA_BASE_URL="${JIRA_BASE_URL:-https://issues.redhat.com}"
 
-# Create Basic Auth header (email:token base64 encoded)
-AUTH_HEADER=$(echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64)
-
 # JQL query for issues updated in date range
 JQL="project = $JIRA_PROJECT AND updated >= '$START_DATE' AND updated <= '$END_DATE' ORDER BY updated DESC"
 
 log "Executing JQL: $JQL"
 
-# Call JIRA REST API
+# Call JIRA REST API using Bearer token (Personal Access Token)
 RESPONSE=$(curl -s -X GET \
-    -H "Authorization: Basic $AUTH_HEADER" \
+    -H "Authorization: Bearer ${JIRA_API_TOKEN}" \
     -H "Content-Type: application/json" \
     --data-urlencode "jql=$JQL" \
     --data-urlencode "maxResults=100" \
