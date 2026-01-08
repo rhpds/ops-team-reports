@@ -49,6 +49,7 @@ fi
 TEAM_KEY=$(yq -r '.key' "$TEAM_CONFIG")
 TEAM_DISPLAY_NAME=$(yq -r '.display_name' "$TEAM_CONFIG")
 GITHUB_USERNAMES=$(yq -r '.selectors.github.usernames | join(",")' "$TEAM_CONFIG")
+GITHUB_ORGS=$(yq -r '.selectors.github.organizations | join(",")' "$TEAM_CONFIG")
 JIRA_BASE_URL=$(yq -r '.selectors.jira.base_url // "https://issues.redhat.com"' "$TEAM_CONFIG")
 SLACK_CHANNELS=$(yq -r '.selectors.slack.channel_ids | join(",")' "$TEAM_CONFIG")
 
@@ -57,6 +58,7 @@ JIRA_PROJECTS=$(yq -r '.selectors.jira.projects[] | .key' "$TEAM_CONFIG" | paste
 
 log "Loaded config for team: $TEAM_KEY ($TEAM_DISPLAY_NAME)"
 log "GitHub usernames: $GITHUB_USERNAMES"
+log "GitHub organizations: $GITHUB_ORGS"
 log "JIRA projects: $JIRA_PROJECTS"
 log "Slack channels: $SLACK_CHANNELS"
 
@@ -146,7 +148,7 @@ echo ""
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}█ 3/3: Gathering GitHub Data                               █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-bash "$SCRIPT_DIR/gather_github.sh" "$WEEK_START" "$WEEK_END" "$GITHUB_FILE" "$LOG_DIR" "$GITHUB_USERNAMES"
+bash "$SCRIPT_DIR/gather_github.sh" "$WEEK_START" "$WEEK_END" "$GITHUB_FILE" "$LOG_DIR" "$GITHUB_USERNAMES" "$GITHUB_ORGS"
 GITHUB_COUNT=$(jq -r '.pr_count // 0' "$GITHUB_FILE" 2>/dev/null || echo "0")
 echo "✅ GitHub: $GITHUB_COUNT PRs"
 echo ""

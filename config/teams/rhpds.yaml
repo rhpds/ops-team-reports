@@ -85,7 +85,7 @@ selectors:
       - "YoNoSoyVictor"
       - "rhjcd"
     # Multiple organizations/repos supported
-    organizations: ["rhpds"]
+    organizations: ["rhpds", "rhjcd"]
 
   slack:
     # Multiple Slack channels to monitor

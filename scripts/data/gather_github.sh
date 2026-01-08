@@ -18,6 +18,7 @@ END_DATE="${2:-$(date -u +%Y-%m-%d)}"
 OUTPUT_FILE="${3:-/tmp/github.json}"
 LOG_DIR="${4:-logs}"
 GITHUB_USERS="${5:-}"
+GITHUB_ORGS="${6:-rhpds}"
 
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/gather_github_$(date -u +%Y-%m-%dT%H-%M-%S).log"
@@ -29,6 +30,7 @@ log() {
 log "Starting GitHub data gathering..."
 log "Date range: $START_DATE to $END_DATE"
 log "Users: $GITHUB_USERS"
+log "Organizations: $GITHUB_ORGS"
 
 # Verify required environment variables
 if [[ -z "${GITHUB_TOKEN:-}" ]]; then
@@ -37,8 +39,19 @@ if [[ -z "${GITHUB_TOKEN:-}" ]]; then
     exit 1
 fi
 
-# Convert comma-separated users to array
+# Convert comma-separated users and orgs to arrays
 IFS=',' read -ra USERS <<< "$GITHUB_USERS"
+IFS=',' read -ra ORGS <<< "$GITHUB_ORGS"
+
+# Build org query part
+ORG_QUERY=""
+for ORG in "${ORGS[@]}"; do
+    if [[ -n "$ORG_QUERY" ]]; then
+        ORG_QUERY="${ORG_QUERY} org:${ORG}"
+    else
+        ORG_QUERY="org:${ORG}"
+    fi
+done
 
 # Collect all PRs
 ALL_PRS=""
@@ -47,8 +60,8 @@ TOTAL_PRS=0
 for USER in "${USERS[@]}"; do
     log "Fetching PRs for user: $USER"
 
-    # Search for PRs by author in the date range
-    SEARCH_QUERY="author:$USER created:${START_DATE}..${END_DATE} is:pr org:rhpds"
+    # Search for PRs by author in the date range across all configured orgs
+    SEARCH_QUERY="author:$USER created:${START_DATE}..${END_DATE} is:pr ${ORG_QUERY}"
 
     RESPONSE=$(curl -s -X GET \
         -H "Authorization: Bearer ${GITHUB_TOKEN}" \
