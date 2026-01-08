@@ -1,0 +1,31 @@
+name: Diagnose JIRA Users
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'JIRA Project Key (e.g., RHDPOPS, RHDPSPPT)'
+        required: false
+        default: 'RHDPOPS'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Diagnose JIRA Users - RHDPOPS
+        env:
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_BASE_URL: https://issues.redhat.com
+        run: |
+          bash scripts/data/diagnose_jira_users.sh RHDPOPS
+
+      - name: Diagnose JIRA Users - RHDPSPPT
+        env:
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_BASE_URL: https://issues.redhat.com
+        run: |
+          bash scripts/data/diagnose_jira_users.sh RHDPSPPT
