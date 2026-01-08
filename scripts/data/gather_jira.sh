@@ -47,7 +47,8 @@ fi
 JIRA_BASE_URL="${JIRA_BASE_URL:-https://issues.redhat.com}"
 
 # Create Basic Auth header (email:token encoded in base64)
-JIRA_AUTH=$(echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64)
+# Use -w 0 on Linux to prevent line wrapping, ignore error on macOS
+JIRA_AUTH=$(echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64 -w 0 2>/dev/null || echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64)
 
 # Build team member filter if provided
 TEAM_FILTER=""

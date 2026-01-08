@@ -16,7 +16,8 @@ if [[ -z "${JIRA_EMAIL:-}" ]]; then
 fi
 
 # Create Basic Auth header (email:token encoded in base64)
-JIRA_AUTH=$(echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64)
+# Use -w 0 on Linux to prevent line wrapping, ignore error on macOS
+JIRA_AUTH=$(echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64 -w 0 2>/dev/null || echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64)
 
 echo "Querying issues in $PROJECT..."
 echo ""
