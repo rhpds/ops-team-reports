@@ -10,7 +10,31 @@ if [[ -z "${JIRA_API_TOKEN:-}" ]]; then
     exit 1
 fi
 
-echo "Querying recent issues in $PROJECT (last 60 days) to extract user profiles..."
+echo "Querying issues in $PROJECT..."
+echo ""
+
+# First, check if we can see ANY issues in the project at all
+JQL_ALL="project = $PROJECT ORDER BY updated DESC"
+RESPONSE_ALL=$(curl -s -X GET \
+    -H "Authorization: Bearer ${JIRA_API_TOKEN}" \
+    -H "Content-Type: application/json" \
+    --data-urlencode "jql=$JQL_ALL" \
+    --data-urlencode "maxResults=10" \
+    --data-urlencode "fields=assignee,reporter,created,updated,key,summary" \
+    "${JIRA_BASE_URL}/rest/api/2/search")
+
+TOTAL_ALL=$(echo "$RESPONSE_ALL" | jq '.total // 0')
+echo "Total issues in project (any time): $TOTAL_ALL"
+
+if [[ $TOTAL_ALL -gt 0 ]]; then
+    echo ""
+    echo "=== Sample Recent Issues (last 10) ==="
+    echo "$RESPONSE_ALL" | jq -r '.issues[] | "[\(.key)] \(.fields.summary) | Assignee: \(.fields.assignee.displayName // "none") | Updated: \(.fields.updated[0:10])"'
+    echo ""
+fi
+
+echo ""
+echo "Now checking last 60 days specifically..."
 echo ""
 
 # Get recent issues from the project (last 60 days for better sample)
