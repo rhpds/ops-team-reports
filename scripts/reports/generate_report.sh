@@ -99,9 +99,9 @@ PROMPT_TEXT=$(cat "$PROMPT_FILE")
 # Escape the prompt text for JSON
 PROMPT_JSON=$(jq -n --arg text "$PROMPT_TEXT" '$text')
 
-# Call Gemini API (using gemini-1.5-flash for fast, cost-effective generation)
+# Call Gemini API (using gemini-1.5-flash-latest for fast, cost-effective generation)
 RESPONSE=$(curl -s -X POST \
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}" \
+    "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}" \
     -H "Content-Type: application/json" \
     -d "{
         \"contents\": [{
