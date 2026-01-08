@@ -2,34 +2,75 @@ key: RHPDS
 display_name: "RHPDS Operations Team"
 description: "Red Hat Demo Platform Services - Operations and Infrastructure Team"
 
-# Team members with GitHub usernames
+# Team members with GitHub and JIRA associations
 members:
   - name: "Perry Rivera"
     github_username: "privera1"
+    jira_email: "privera@redhat.com"
+    jira_display_name: "Perry Rivera"
   - name: "Billy Bethell"
     github_username: "bbethell-1"
+    jira_email: "bbethell@redhat.com"
+    jira_display_name: "William Bethell"
   - name: "Chandrabose Bomman"
     github_username: "bosebc"
+    jira_email: "cbomman@redhat.com"
+    jira_display_name: "Chandrabose Bomman"
   - name: "Kadeem Lewis"
     github_username: "klewis0928"
+    jira_email: null  # Not found in JIRA activity
+    jira_display_name: null
   - name: "Ahsen Shah"
     github_username: "ahsen-shah"
+    jira_email: "ahshah@redhat.com"
+    jira_display_name: "Ahsen Shah"
   - name: "Harsh Arora"
     github_username: "hararora123"
+    jira_email: "hararora@redhat.com"
+    jira_display_name: "Harsh Arora"
   - name: "Dibyendu Jana"
     github_username: "d-jana"
+    jira_email: "djana@redhat.com"
+    jira_display_name: "Dibyendu Jana"
   - name: "Victor Aguilera Fuentes"
     github_username: "YoNoSoyVictor"
+    jira_email: "vaguiler@redhat.com"
+    jira_display_name: "Victor Aguilera"
   - name: "Josh Disraeli"
     github_username: "rhjcd"
+    jira_email: "jdisrael@redhat.com"
+    jira_display_name: "Joshua Disraeli"
 
 # Data selectors for gathering
 selectors:
   jira:
     # JIRA instance configuration
     base_url: "https://issues.redhat.com"
-    projects: ["RHDPOPS"]
-    board_id: "21616"
+
+    # Multiple projects with separate configurations
+    projects:
+      - key: "RHDPOPS"
+        name: "RHPDS Operations"
+        board_id: "21616"
+        description: "Internal operations and infrastructure work"
+        # Team members actively working on RHDPOPS (based on assignee/reporter data)
+        team_members:
+          - "Perry Rivera"
+          - "Billy Bethell"
+          - "Chandrabose Bomman"
+          - "Ahsen Shah"
+          - "Harsh Arora"
+          - "Dibyendu Jana"
+          - "Victor Aguilera Fuentes"
+          - "Josh Disraeli"
+
+      - key: "RHDPSPPT"
+        name: "RHPDS Customer Support & Provisioning"
+        board_id: "97"  # From the queue URL
+        description: "Customer-facing workshop provisioning and lab support tickets"
+        # Team members actively working on RHDPSPPT
+        team_members:
+          - "Victor Aguilera Fuentes"  # Found as reporter in RHDPSPPT
 
   github:
     # GitHub usernames must match members above

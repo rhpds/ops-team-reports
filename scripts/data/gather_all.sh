@@ -49,13 +49,15 @@ fi
 TEAM_KEY=$(yq -r '.key' "$TEAM_CONFIG")
 TEAM_DISPLAY_NAME=$(yq -r '.display_name' "$TEAM_CONFIG")
 GITHUB_USERNAMES=$(yq -r '.selectors.github.usernames | join(",")' "$TEAM_CONFIG")
-JIRA_PROJECT=$(yq -r '.selectors.jira.projects[0]' "$TEAM_CONFIG")
 JIRA_BASE_URL=$(yq -r '.selectors.jira.base_url // "https://issues.redhat.com"' "$TEAM_CONFIG")
 SLACK_CHANNELS=$(yq -r '.selectors.slack.channel_ids | join(",")' "$TEAM_CONFIG")
 
+# Get all JIRA project keys
+JIRA_PROJECTS=$(yq -r '.selectors.jira.projects[] | .key' "$TEAM_CONFIG" | paste -sd "," -)
+
 log "Loaded config for team: $TEAM_KEY ($TEAM_DISPLAY_NAME)"
 log "GitHub usernames: $GITHUB_USERNAMES"
-log "JIRA project: $JIRA_PROJECT"
+log "JIRA projects: $JIRA_PROJECTS"
 log "Slack channels: $SLACK_CHANNELS"
 
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════════╗${NC}"
@@ -83,14 +85,53 @@ JIRA_FILE="/tmp/jira_${TIMESTAMP}.json"
 SLACK_FILE="/tmp/slack_${TIMESTAMP}.json"
 GITHUB_FILE="/tmp/github_${TIMESTAMP}.json"
 
-# 1. JIRA
+# 1. JIRA (Multiple Projects)
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}█ 1/3: Gathering JIRA Data                                 █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 export JIRA_BASE_URL
-bash "$SCRIPT_DIR/gather_jira.sh" "$WEEK_START" "$WEEK_END" "$JIRA_FILE" "$LOG_DIR" "$JIRA_PROJECT"
-JIRA_COUNT=$(jq -r '.issue_count // 0' "$JIRA_FILE" 2>/dev/null || echo "0")
-echo "✅ JIRA: $JIRA_COUNT issues"
+
+# Loop through each JIRA project and gather data separately
+TOTAL_JIRA_COUNT=0
+PROJECT_COUNT=$(echo "$JIRA_PROJECTS" | tr ',' '\n' | wc -l | tr -d ' ')
+PROJECT_INDEX=0
+
+# Create array to hold project data
+declare -a JIRA_PROJECT_DATA
+
+for PROJECT_KEY in $(echo "$JIRA_PROJECTS" | tr ',' '\n'); do
+    PROJECT_INDEX=$((PROJECT_INDEX + 1))
+    JIRA_PROJECT_FILE="/tmp/jira_${PROJECT_KEY}_${TIMESTAMP}.json"
+
+    echo "  [$PROJECT_INDEX/$PROJECT_COUNT] Fetching $PROJECT_KEY..."
+    bash "$SCRIPT_DIR/gather_jira.sh" "$WEEK_START" "$WEEK_END" "$JIRA_PROJECT_FILE" "$LOG_DIR" "$PROJECT_KEY"
+
+    PROJECT_COUNT_VAL=$(jq -r '.issue_count // 0' "$JIRA_PROJECT_FILE" 2>/dev/null || echo "0")
+    TOTAL_JIRA_COUNT=$((TOTAL_JIRA_COUNT + PROJECT_COUNT_VAL))
+    echo "    → $PROJECT_COUNT_VAL issues"
+
+    # Store project data for later merging
+    JIRA_PROJECT_DATA+=("$JIRA_PROJECT_FILE")
+done
+
+# Merge all project data into a single JIRA output
+if [ ${#JIRA_PROJECT_DATA[@]} -eq 1 ]; then
+    # Single project - just copy
+    cp "${JIRA_PROJECT_DATA[0]}" "$JIRA_FILE"
+else
+    # Multiple projects - merge into structured format
+    jq -n \
+        --slurpfile projects <(cat "${JIRA_PROJECT_DATA[@]}") \
+        '{
+            raw_text: ($projects | map(.raw_text) | join("\n\n")),
+            source: "jira",
+            issue_count: ($projects | map(.issue_count) | add),
+            projects: $projects,
+            date_range: $projects[0].date_range
+        }' > "$JIRA_FILE"
+fi
+
+echo "✅ JIRA: $TOTAL_JIRA_COUNT issues across $PROJECT_COUNT projects"
 echo ""
 
 # 2. SLACK
@@ -159,7 +200,7 @@ echo -e "${CYAN}║   Data Summary                                             �
 echo -e "${CYAN}╚═══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-echo -e "  ${BLUE}JIRA Issues:${NC}    ${GREEN}${JIRA_COUNT}${NC}"
+echo -e "  ${BLUE}JIRA Issues:${NC}    ${GREEN}${TOTAL_JIRA_COUNT}${NC}"
 echo -e "  ${BLUE}GitHub PRs:${NC}     ${GREEN}${GITHUB_COUNT}${NC}"
 echo -e "  ${BLUE}Slack Channels:${NC} ${GREEN}5${NC}"
 echo ""
@@ -169,6 +210,10 @@ echo ""
 
 # Cleanup temp files
 rm -f "$JIRA_FILE" "$SLACK_FILE" "$GITHUB_FILE"
+# Clean up individual JIRA project files
+for PROJECT_FILE in "${JIRA_PROJECT_DATA[@]}"; do
+    rm -f "$PROJECT_FILE"
+done
 
 log "Data gathering complete"
 
