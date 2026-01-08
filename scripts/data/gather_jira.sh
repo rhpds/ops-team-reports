@@ -38,7 +38,16 @@ if [[ -z "${JIRA_API_TOKEN:-}" ]]; then
     exit 1
 fi
 
+if [[ -z "${JIRA_EMAIL:-}" ]]; then
+    log "ERROR: JIRA_EMAIL must be set"
+    echo '{"raw_text": "No JIRA data - missing credentials", "source": "jira", "error": "missing_credentials"}' > "$OUTPUT_FILE"
+    exit 1
+fi
+
 JIRA_BASE_URL="${JIRA_BASE_URL:-https://issues.redhat.com}"
+
+# Create Basic Auth header (email:token encoded in base64)
+JIRA_AUTH=$(echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64)
 
 # Build team member filter if provided
 TEAM_FILTER=""
@@ -62,9 +71,9 @@ JQL="project = $JIRA_PROJECT AND ((created >= '$START_DATE' AND created <= '$END
 
 log "Executing JQL: $JQL"
 
-# Call JIRA REST API using Bearer token (Personal Access Token)
+# Call JIRA REST API using Basic Auth (email:token)
 RESPONSE=$(curl -s -X GET \
-    -H "Authorization: Bearer ${JIRA_API_TOKEN}" \
+    -H "Authorization: Basic ${JIRA_AUTH}" \
     -H "Content-Type: application/json" \
     --data-urlencode "jql=$JQL" \
     --data-urlencode "maxResults=100" \

@@ -19,6 +19,7 @@ jobs:
       - name: Diagnose JIRA Users - RHDPOPS
         env:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_BASE_URL: https://issues.redhat.com
         run: |
           bash scripts/data/diagnose_jira_users.sh RHDPOPS
@@ -26,6 +27,7 @@ jobs:
       - name: Diagnose JIRA Users - RHDPSPPT
         env:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_BASE_URL: https://issues.redhat.com
         run: |
           bash scripts/data/diagnose_jira_users.sh RHDPSPPT

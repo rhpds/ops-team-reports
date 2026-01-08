@@ -10,13 +10,21 @@ if [[ -z "${JIRA_API_TOKEN:-}" ]]; then
     exit 1
 fi
 
+if [[ -z "${JIRA_EMAIL:-}" ]]; then
+    echo "ERROR: JIRA_EMAIL must be set"
+    exit 1
+fi
+
+# Create Basic Auth header (email:token encoded in base64)
+JIRA_AUTH=$(echo -n "${JIRA_EMAIL}:${JIRA_API_TOKEN}" | base64)
+
 echo "Querying issues in $PROJECT..."
 echo ""
 
 # First, check if we can see ANY issues in the project at all
 JQL_ALL="project = $PROJECT ORDER BY updated DESC"
 RESPONSE_ALL=$(curl -s -X GET \
-    -H "Authorization: Bearer ${JIRA_API_TOKEN}" \
+    -H "Authorization: Basic ${JIRA_AUTH}" \
     -H "Content-Type: application/json" \
     --data-urlencode "jql=$JQL_ALL" \
     --data-urlencode "maxResults=10" \
@@ -55,7 +63,7 @@ echo ""
 JQL="project = $PROJECT AND updated >= -60d ORDER BY updated DESC"
 
 RESPONSE=$(curl -s -X GET \
-    -H "Authorization: Bearer ${JIRA_API_TOKEN}" \
+    -H "Authorization: Basic ${JIRA_AUTH}" \
     -H "Content-Type: application/json" \
     --data-urlencode "jql=$JQL" \
     --data-urlencode "maxResults=100" \
