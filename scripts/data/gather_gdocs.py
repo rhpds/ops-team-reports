@@ -68,10 +68,11 @@ def main():
         ]
 
         # Add date filters if provided
+        # Use modifiedTime instead of createdTime to catch recently updated docs
         if start_date:
-            query_parts.append(f"createdTime >= '{start_date}T00:00:00'")
+            query_parts.append(f"modifiedTime >= '{start_date}T00:00:00'")
         if end_date:
-            query_parts.append(f"createdTime <= '{end_date}T23:59:59'")
+            query_parts.append(f"modifiedTime <= '{end_date}T23:59:59'")
 
         query = ' and '.join(query_parts)
         log(f"Executing query: {query}", log_file)
