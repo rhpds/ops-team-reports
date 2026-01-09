@@ -68,7 +68,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
           X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
-          GDOCS_SERVICE_ACCOUNT: ${{ secrets.GDOCS_SERVICE_ACCOUNT }}
+          GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
         run: |
           echo "Verifying required credentials..."
 
@@ -86,8 +86,8 @@ jobs:
             echo "WARNING: Slack credentials not configured - Slack data will be skipped"
           fi
 
-          if [ -z "$GDOCS_SERVICE_ACCOUNT" ]; then
-            echo "WARNING: GDOCS_SERVICE_ACCOUNT not configured - Google Docs data will be skipped"
+          if [ -z "$GOOGLE_TOKEN" ]; then
+            echo "WARNING: GOOGLE_TOKEN not configured - CoG emails will be skipped"
           fi
 
           echo "✅ All required credentials configured"
@@ -103,7 +103,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
           X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
-          GDOCS_SERVICE_ACCOUNT: ${{ secrets.GDOCS_SERVICE_ACCOUNT }}
+          GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📊 Gathering Data for RHPDS Team"

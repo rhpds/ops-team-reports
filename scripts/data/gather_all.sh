@@ -165,13 +165,13 @@ GITHUB_COMMIT_COUNT=$(jq -r '.commit_count // 0' "$GITHUB_FILE" 2>/dev/null || e
 echo "✅ GitHub: $GITHUB_PR_COUNT PRs, $GITHUB_COMMIT_COUNT commits"
 echo ""
 
-# 4. GOOGLE DOCS
+# 4. COG EMAILS (from Gmail)
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}█ 4/4: Gathering Google Docs Data                          █${NC}"
+echo -e "${YELLOW}█ 4/4: Gathering CoG Emails from Gmail                     █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-python3 "$SCRIPT_DIR/gather_gdocs.py" "$WEEK_START" "$WEEK_END" "$GDOCS_FILE" "$LOG_DIR" "$GDOCS_SEARCH_QUERY"
-GDOCS_DOC_COUNT=$(jq -r '.doc_count // 0' "$GDOCS_FILE" 2>/dev/null || echo "0")
-echo "✅ Google Docs: $GDOCS_DOC_COUNT documents"
+python3 "$SCRIPT_DIR/gather_cog_emails.py" "$WEEK_START" "$WEEK_END" "$GDOCS_FILE" "$LOG_DIR"
+GDOCS_DOC_COUNT=$(jq -r '.email_count // 0' "$GDOCS_FILE" 2>/dev/null || echo "0")
+echo "✅ CoG Emails: $GDOCS_DOC_COUNT emails"
 echo ""
 
 # 5. MERGE ALL DATA

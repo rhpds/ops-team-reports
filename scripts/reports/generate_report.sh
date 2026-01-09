@@ -30,6 +30,7 @@ echo "  Output: $REPORT_HTML_FILE"
 JIRA_TEXT=$(jq -r '.jira.raw_text // "No JIRA data"' "$DATA_FILE")
 SLACK_TEXT=$(jq -r '.slack.raw_text // "No Slack data"' "$DATA_FILE")
 GITHUB_TEXT=$(jq -r '.github.raw_text // "No GitHub data"' "$DATA_FILE")
+COG_TEXT=$(jq -r '.gdocs.raw_text // "No CoG emails"' "$DATA_FILE")
 WEEK_START=$(jq -r '.metadata.period_start' "$DATA_FILE")
 WEEK_END=$(jq -r '.metadata.period_end' "$DATA_FILE")
 TEAM_NAME=$(jq -r '.metadata.team' "$DATA_FILE")
@@ -50,28 +51,37 @@ $SLACK_TEXT
 ## GitHub Pull Requests
 $GITHUB_TEXT
 
+## CoG Meeting Notes (from Gmail)
+$COG_TEXT
+
 # INSTRUCTIONS
 
 Generate a comprehensive weekly report in Markdown format with the following sections:
 
 1. **Executive Summary** (2-3 sentences)
    - Highlight the most important accomplishments and activities
+   - **IMPORTANT**: Analyze CoG meeting notes to identify key accomplishments and decisions
 
 2. **Key Accomplishments**
    - List major milestones, completed work, or significant progress
    - Include links to JIRA issues, PRs, etc.
+   - **CRITICAL**: Review CoG meeting notes and extract accomplishments discussed in meetings
+   - Include insights from CoG notes about what was completed, decided, or achieved
 
 3. **Team Activity**
    - Summarize JIRA progress (issues completed, in progress, blocked)
    - Summarize GitHub activity (PRs merged, under review)
    - Note any important Slack discussions or decisions
+   - Summarize key topics and decisions from CoG meeting notes
 
 4. **Collaboration & Communication**
    - Highlight cross-team collaboration or important discussions
    - Note any blockers or issues that need attention
+   - Reference important discussions from CoG meeting notes
 
 5. **Next Week Focus**
    - Based on the data, what are the likely priorities for next week?
+   - **IMPORTANT**: Analyze CoG notes for action items, upcoming priorities, and planned work mentioned in meetings
 
 # FORMAT GUIDELINES
 - Use Markdown headers (##, ###)
@@ -80,6 +90,7 @@ Generate a comprehensive weekly report in Markdown format with the following sec
 - Keep it professional but readable
 - Be concise but informative
 - If a data source has no meaningful data, briefly note it and move on
+- **CRITICAL**: Give significant weight to CoG meeting notes - they contain important context about accomplishments and future plans
 
 Generate the report now:
 EOF
