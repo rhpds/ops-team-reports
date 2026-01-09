@@ -54,6 +54,7 @@ GITHUB_MONITORED_REPOS=$(yq -r '.selectors.github.monitored_repos | join(",")' "
 GITHUB_MONITORED_BRANCHES=$(yq -r '.selectors.github.monitored_branches | tojson' "$TEAM_CONFIG" 2>/dev/null || echo "[]")
 JIRA_BASE_URL=$(yq -r '.selectors.jira.base_url // "https://issues.redhat.com"' "$TEAM_CONFIG")
 SLACK_CHANNELS=$(yq -r '.selectors.slack.channel_ids | join(",")' "$TEAM_CONFIG")
+GDOCS_SEARCH_QUERY=$(yq -r '.selectors.gdocs.search_query // "cog"' "$TEAM_CONFIG")
 
 # Get all JIRA project keys
 JIRA_PROJECTS=$(yq -r '.selectors.jira.projects[] | .key' "$TEAM_CONFIG" | paste -sd "," -)
@@ -63,6 +64,7 @@ log "GitHub usernames: $GITHUB_USERNAMES"
 log "GitHub organizations: $GITHUB_ORGS"
 log "JIRA projects: $JIRA_PROJECTS"
 log "Slack channels: $SLACK_CHANNELS"
+log "Google Docs search query: $GDOCS_SEARCH_QUERY"
 
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║   Complete Data Gathering (All Sources)                   ║${NC}"
@@ -88,10 +90,11 @@ log "Data gathering started for team $TEAM, period $WEEK_START to $WEEK_END"
 JIRA_FILE="/tmp/jira_${TIMESTAMP}.json"
 SLACK_FILE="/tmp/slack_${TIMESTAMP}.json"
 GITHUB_FILE="/tmp/github_${TIMESTAMP}.json"
+GDOCS_FILE="/tmp/gdocs_${TIMESTAMP}.json"
 
 # 1. JIRA (Multiple Projects)
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}█ 1/3: Gathering JIRA Data                                 █${NC}"
+echo -e "${YELLOW}█ 1/4: Gathering JIRA Data                                 █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 export JIRA_BASE_URL
 
@@ -146,7 +149,7 @@ echo ""
 
 # 2. SLACK
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}█ 2/3: Gathering Slack Data                                █${NC}"
+echo -e "${YELLOW}█ 2/4: Gathering Slack Data                                █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 bash "$SCRIPT_DIR/gather_slack.sh" "$SLACK_CHANNELS" "$GITHUB_USERNAMES" "$SLACK_FILE" "$LOG_DIR"
 echo "✅ Slack: Data collected"
@@ -154,7 +157,7 @@ echo ""
 
 # 3. GITHUB
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}█ 3/3: Gathering GitHub Data                               █${NC}"
+echo -e "${YELLOW}█ 3/4: Gathering GitHub Data                               █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 bash "$SCRIPT_DIR/gather_github.sh" "$WEEK_START" "$WEEK_END" "$GITHUB_FILE" "$LOG_DIR" "$GITHUB_USERNAMES" "$GITHUB_ORGS" "$GITHUB_MONITORED_REPOS" "$GITHUB_MONITORED_BRANCHES"
 GITHUB_PR_COUNT=$(jq -r '.pr_count // 0' "$GITHUB_FILE" 2>/dev/null || echo "0")
@@ -162,7 +165,16 @@ GITHUB_COMMIT_COUNT=$(jq -r '.commit_count // 0' "$GITHUB_FILE" 2>/dev/null || e
 echo "✅ GitHub: $GITHUB_PR_COUNT PRs, $GITHUB_COMMIT_COUNT commits"
 echo ""
 
-# 4. MERGE ALL DATA
+# 4. GOOGLE DOCS
+echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}█ 4/4: Gathering Google Docs Data                          █${NC}"
+echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+python3 "$SCRIPT_DIR/gather_gdocs.py" "$WEEK_START" "$WEEK_END" "$GDOCS_FILE" "$LOG_DIR" "$GDOCS_SEARCH_QUERY"
+GDOCS_DOC_COUNT=$(jq -r '.doc_count // 0' "$GDOCS_FILE" 2>/dev/null || echo "0")
+echo "✅ Google Docs: $GDOCS_DOC_COUNT documents"
+echo ""
+
+# 5. MERGE ALL DATA
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}█ Merging All Data Sources                                 █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -171,11 +183,13 @@ echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━�
 JIRA_DATA=$(cat "$JIRA_FILE")
 SLACK_DATA=$(cat "$SLACK_FILE")
 GITHUB_DATA=$(cat "$GITHUB_FILE")
+GDOCS_DATA=$(cat "$GDOCS_FILE")
 
 jq -n \
   --argjson jira "$JIRA_DATA" \
   --argjson slack "$SLACK_DATA" \
   --argjson github "$GITHUB_DATA" \
+  --argjson gdocs "$GDOCS_DATA" \
   --arg start "$WEEK_START" \
   --arg end "$WEEK_END" \
   --arg team "$TEAM_DISPLAY_NAME" \
@@ -192,7 +206,8 @@ jq -n \
     },
     jira: $jira,
     slack: $slack,
-    github: $github
+    github: $github,
+    gdocs: $gdocs
   }' > "$OUTPUT_FILE"
 
 # Validate JSON
@@ -214,6 +229,7 @@ echo ""
 echo -e "  ${BLUE}JIRA Issues:${NC}    ${GREEN}${TOTAL_JIRA_COUNT}${NC}"
 echo -e "  ${BLUE}GitHub PRs:${NC}     ${GREEN}${GITHUB_PR_COUNT}${NC}"
 echo -e "  ${BLUE}GitHub Commits:${NC} ${GREEN}${GITHUB_COMMIT_COUNT}${NC}"
+echo -e "  ${BLUE}Google Docs:${NC}    ${GREEN}${GDOCS_DOC_COUNT}${NC}"
 echo -e "  ${BLUE}Slack Channels:${NC} ${GREEN}5${NC}"
 echo ""
 echo -e "${GREEN}✅ Output:${NC} $OUTPUT_FILE"
@@ -221,7 +237,7 @@ echo -e "${GREEN}✅ Symlink:${NC} data/${TEAM}/team_data_latest.json"
 echo ""
 
 # Cleanup temp files
-rm -f "$JIRA_FILE" "$SLACK_FILE" "$GITHUB_FILE"
+rm -f "$JIRA_FILE" "$SLACK_FILE" "$GITHUB_FILE" "$GDOCS_FILE"
 # Clean up individual JIRA project files
 for PROJECT_FILE in "${JIRA_PROJECT_DATA[@]}"; do
     rm -f "$PROJECT_FILE"

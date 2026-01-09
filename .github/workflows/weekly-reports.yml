@@ -68,6 +68,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
           X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
+          GDOCS_SERVICE_ACCOUNT: ${{ secrets.GDOCS_SERVICE_ACCOUNT }}
         run: |
           echo "Verifying required credentials..."
 
@@ -83,6 +84,10 @@ jobs:
 
           if [ -z "$X_SLACK_WEB_TOKEN" ] || [ -z "$X_SLACK_COOKIE_TOKEN" ]; then
             echo "WARNING: Slack credentials not configured - Slack data will be skipped"
+          fi
+
+          if [ -z "$GDOCS_SERVICE_ACCOUNT" ]; then
+            echo "WARNING: GDOCS_SERVICE_ACCOUNT not configured - Google Docs data will be skipped"
           fi
 
           echo "✅ All required credentials configured"
