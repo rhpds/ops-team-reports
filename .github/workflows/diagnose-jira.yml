@@ -16,18 +16,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Diagnose JIRA Users - RHDPOPS
-        env:
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
-          JIRA_BASE_URL: https://issues.redhat.com
-        run: |
-          bash scripts/data/diagnose_jira_users.sh RHDPOPS
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-      - name: Diagnose JIRA Users - RHDPSPPT
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Test JIRA Connection - RHDPOPS
         env:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_BASE_URL: https://issues.redhat.com
         run: |
-          bash scripts/data/diagnose_jira_users.sh RHDPSPPT
+          python3 scripts/data/gather_jira.py 2026-01-01 2026-01-08 /tmp/jira_rhdpops.json /tmp RHDPOPS
+          cat /tmp/jira_rhdpops.json | head -c 500
+
+      - name: Test JIRA Connection - RHDPSPPT
+        env:
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_BASE_URL: https://issues.redhat.com
+        run: |
+          python3 scripts/data/gather_jira.py 2026-01-01 2026-01-08 /tmp/jira_rhdpsppt.json /tmp RHDPSPPT
+          cat /tmp/jira_rhdpsppt.json | head -c 500

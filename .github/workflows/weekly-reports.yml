@@ -39,7 +39,8 @@ jobs:
           sudo wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/bin/yq
 
-          # Install markdown Python module for HTML conversion
+          # Install Python dependencies
+          pip install -r requirements.txt
           pip install markdown
 
       - name: Verify AI credentials
@@ -64,7 +65,6 @@ jobs:
       - name: Verify credentials
         env:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
           X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
@@ -73,11 +73,6 @@ jobs:
 
           if [ -z "$JIRA_API_TOKEN" ]; then
             echo "ERROR: JIRA_API_TOKEN not configured"
-            exit 1
-          fi
-
-          if [ -z "$JIRA_EMAIL" ]; then
-            echo "ERROR: JIRA_EMAIL not configured"
             exit 1
           fi
 
@@ -99,7 +94,6 @@ jobs:
       - name: Gather data from all sources
         env:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_BASE_URL: "https://issues.redhat.com"
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
