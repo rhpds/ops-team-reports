@@ -151,8 +151,9 @@ echo ""
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}█ 2/4: Gathering Slack Data                                █${NC}"
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-bash "$SCRIPT_DIR/gather_slack.sh" "$SLACK_CHANNELS" "$GITHUB_USERNAMES" "$SLACK_FILE" "$LOG_DIR"
-echo "✅ Slack: Data collected"
+python3 "$SCRIPT_DIR/gather_slack_bot.py" "$SLACK_CHANNELS" "$GITHUB_USERNAMES" "$SLACK_FILE" "$LOG_DIR"
+SLACK_MESSAGE_COUNT=$(jq -r '.message_count // 0' "$SLACK_FILE" 2>/dev/null || echo "0")
+echo "✅ Slack: $SLACK_MESSAGE_COUNT messages"
 echo ""
 
 # 3. GITHUB

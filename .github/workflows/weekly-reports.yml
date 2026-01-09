@@ -66,8 +66,7 @@ jobs:
         env:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-          X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
-          X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
         run: |
           echo "Verifying required credentials..."
@@ -82,8 +81,8 @@ jobs:
             exit 1
           fi
 
-          if [ -z "$X_SLACK_WEB_TOKEN" ] || [ -z "$X_SLACK_COOKIE_TOKEN" ]; then
-            echo "WARNING: Slack credentials not configured - Slack data will be skipped"
+          if [ -z "$SLACK_BOT_TOKEN" ]; then
+            echo "WARNING: SLACK_BOT_TOKEN not configured - Slack data will be skipped"
           fi
 
           if [ -z "$GOOGLE_TOKEN" ]; then
@@ -101,8 +100,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_BASE_URL: "https://issues.redhat.com"
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-          X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
-          X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
