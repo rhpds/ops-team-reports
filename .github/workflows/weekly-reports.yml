@@ -103,6 +103,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           X_SLACK_WEB_TOKEN: ${{ secrets.X_SLACK_WEB_TOKEN }}
           X_SLACK_COOKIE_TOKEN: ${{ secrets.X_SLACK_COOKIE_TOKEN }}
+          GDOCS_SERVICE_ACCOUNT: ${{ secrets.GDOCS_SERVICE_ACCOUNT }}
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📊 Gathering Data for RHPDS Team"
